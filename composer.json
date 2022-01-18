@@ -1,0 +1,27 @@
+{
+    "name": "socialpoint/rdkafka-shutdown-repro",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "ext-rdkafka": "*",
+        "nyholm/psr7": "^1.4",
+        "nyholm/psr7-server": "^1.0",
+        "slim/slim": "^4.9",
+        "symfony/stopwatch": "^5.4",
+        "uma/dic": "^3.0"
+    },
+    "require-dev": {
+        "kwn/php-rdkafka-stubs": "^2.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Socialpoint\\RdkafkaShutdownRepro\\": "src/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "7.3"
+        },
+        "sort-packages": true
+    }
+}
