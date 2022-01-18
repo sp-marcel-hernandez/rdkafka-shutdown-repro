@@ -3,6 +3,7 @@
     "type": "project",
     "license": "MIT",
     "require": {
+        "php": "7.3.x",
         "ext-rdkafka": "*",
         "nyholm/psr7": "^1.4",
         "nyholm/psr7-server": "^1.0",
@@ -19,9 +20,6 @@
         }
     },
     "config": {
-        "platform": {
-            "php": "7.3"
-        },
         "sort-packages": true
     }
 }

@@ -20,28 +20,50 @@ services:
       - ./public:/var/www/webapp/public
 
   php-fpm:
-    image: 1maa/php-dev:7.3
+    image: 1maa/php:7.3-rdkafka-5.0.2-lib-0.11.3
     volumes:
       - .:/var/www/webapp
     working_dir: /var/www/webapp
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:6.0.2
     environment:
-      - ZOOKEEPER_CLIENT_PORT=2181
-      - ZOOKEEPER_TICK_TIME=2000
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+      - zookeeper_secrets:/etc/zookeeper/secrets
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:6.0.2
     depends_on:
       - zookeeper
     environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      KAFKA_BROKER_ID: "1"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STAT_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_JMX_PORT: "9581"
+      KAFKA_LOG_RETENTION_HOURS: "4"
+      KAFKA_LOG_ROLL_MS: "600000"
+      KAFKA_LOG_SEGMENT_BYTES: "1073741824"
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: "300000"
+      KAFKA_CLEANUP_POLICY: "delete"
+      KAFKA_RETENTION_MS: "43200000"
+      KAFKA_MESSAGE_MAX_BYTES: "60010000"
+      KAFKA_RECEIVE_MESSAGE_MAX_BYTES: "60010000"
+      KAFKA_REPLICA_FETCH_MAX_BYTES: "60010000"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: "DEBUG"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      ADVERTISED_LISTENER: "kafka"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+      - kafka_secrets:/etc/kafka/secrets
 
   kowl:
     image: quay.io/cloudhut/kowl:master
@@ -49,4 +71,11 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     environment:
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: "kafka:9092"
+
+volumes:
+  kafka_data: ~
+  kafka_secrets: ~
+  zookeeper_data: ~
+  zookeeper_log: ~
+  zookeeper_secrets: ~

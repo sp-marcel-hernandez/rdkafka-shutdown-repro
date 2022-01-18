@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Nyholm\Psr7\Response;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -63,9 +65,9 @@ $cnt = new Container([
             private $clock;
             /** @var LoggerInterface */
             private $logger;
-            /** @var \RdKafka\Producer */
+            /** @var RdKafka\Producer */
             private $producer;
-            /** @var \RdKafka\ProducerTopic */
+            /** @var RdKafka\ProducerTopic */
             private $topic;
             /** @var array<string, float>s */
             private $times;
@@ -86,15 +88,18 @@ $cnt = new Container([
 
                 $this->clock->start('produce');
                 for ($i = 0; $i < $this->events; $i++) {
-                    $this->topic->produce(RD_KAFKA_PARTITION_UA, 0, $i);
+                    $this->topic->produce(RD_KAFKA_PARTITION_UA, 0, (string) $i);
                 }
                 $this->times["produce $this->events messages (ms): "] = $this->clock->stop('produce')->getDuration();
 
                 $this->clock->start('flush');
-                $this->producer->flush(PHP_INT_MAX);
+                $this->producer->flush(-1);
                 $this->times['flush (ms): '] = $this->clock->stop('flush')->getDuration();
 
-                $response = new Response(200, ['Content-Type' => 'text/plain'], "Published $this->events messages" . PHP_EOL);
+                ob_start();
+                phpinfo();
+                $response = new Response(200, ['Content-Type' => 'text/html'], ob_get_contents() . PHP_EOL);
+                ob_clean();
 
                 $this->times['handler (ms): '] = $this->clock->stop('handler')->getDuration();
 
@@ -112,16 +117,9 @@ $cnt = new Container([
 ]);
 
 $app = AppFactory::create(null, $cnt);
-
 $app->get('/', 'index');
-
 $app->add(new ContentLengthMiddleware());
-
 $app->run();
 
-// Write logs out of band
-fastcgi_finish_request();
-$all = $clock->stop('all')->getDuration();
-
 $cnt->get('index')->logTimings();
-$cnt->get(LoggerInterface::class)->log(LogLevel::INFO, 'all (ms): ' . $all);
+$cnt->get(LoggerInterface::class)->log(LogLevel::INFO, 'all (ms): ' . $clock->stop('all')->getDuration());
